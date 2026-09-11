@@ -1,0 +1,19 @@
+services:
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./server/app:/app/app
+      - ./server/tests:/app/tests
+
+    environment:
+      ATLAS_ENV: development
+
+    restart: unless-stopped

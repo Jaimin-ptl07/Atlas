@@ -1,0 +1,15 @@
+services:
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+
+    ports:
+      - "8000:8000"
+
+    environment:
+      ATLAS_ENV: production
+
+    restart: unless-stopped

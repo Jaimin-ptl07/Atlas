@@ -1,0 +1,12 @@
+services:
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+
+    ports:
+      - "8000:8000"
+
+    restart: unless-stopped
