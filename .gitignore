@@ -17,3 +17,4 @@ Desktop.ini
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+server/experiments/results/

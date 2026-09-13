@@ -48,6 +48,31 @@ def test_get_db_yields_working_session_then_closes_it(monkeypatch):
     assert closed == [True]
 
 
+def test_get_db_rolls_back_when_request_fails(monkeypatch):
+    from sqlalchemy.orm import Session
+
+    from app.db.session import get_db
+
+    rolled_back = []
+    original_rollback = Session.rollback
+    monkeypatch.setattr(
+        Session, "rollback", lambda self: (rolled_back.append(True), original_rollback(self))
+    )
+
+    _use_in_memory_sqlite(monkeypatch)
+
+    gen = get_db()
+    next(gen)  # session yielded to the request
+
+    # An exception propagating through the dependency must trigger rollback
+    import pytest
+
+    with pytest.raises(ValueError):
+        gen.throw(ValueError("simulated request failure"))
+
+    assert rolled_back == [True]
+
+
 def test_engine_uses_configured_database_url(monkeypatch):
     from app.db.session import get_engine
 

@@ -40,5 +40,18 @@ services:
       timeout: 5s
       retries: 5
 
+  # Load generator for database experiments — own container so it never
+  # competes with the server for CPU. Run ad hoc:
+  #   docker compose -f compose.yaml -f compose.dev.yaml run --rm loadgen \
+  #     python -m experiments.load_test --url http://server:8000 --qps 100
+  loadgen:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+    command: ["sleep", "infinity"]
+    volumes:
+      - ./server/experiments:/app/experiments
+
 volumes:
   postgres_data:
