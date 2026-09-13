@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     app_name: str = "Atlas API"
     environment: str = "development"
     debug: bool = False
+    database_url: str = "postgresql+psycopg://atlas:atlas@localhost:5432/atlas"
     
     model_config = SettingsConfigDict(
         env_file=".env",
