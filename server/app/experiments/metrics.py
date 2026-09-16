@@ -127,27 +127,33 @@ experiment_metrics = ExperimentMetrics()
 
 
 def attach_instrumentation(engine, metrics: ExperimentMetrics) -> None:
-    """Hook pool + cursor events of an Engine onto a metrics registry."""
+    """Hook pool + cursor events of an Engine onto a metrics registry.
+
+    Accepts sync or async engines: the async engine wraps the same sync
+    pool, and cursor events fire on the underlying sync Engine.
+    """
     from sqlalchemy import event
 
-    @event.listens_for(engine.pool, "connect")
+    sync_engine = getattr(engine, "sync_engine", engine)
+
+    @event.listens_for(sync_engine.pool, "connect")
     def _on_connect(dbapi_connection, connection_record):
         # A NEW physical database connection was opened (TCP + auth cost paid)
         metrics.record_connection_created()
 
-    @event.listens_for(engine.pool, "checkout")
+    @event.listens_for(sync_engine.pool, "checkout")
     def _on_checkout(dbapi_connection, connection_record, connection_proxy):
         metrics.record_checkout()
 
-    @event.listens_for(engine.pool, "checkin")
+    @event.listens_for(sync_engine.pool, "checkin")
     def _on_checkin(dbapi_connection, connection_record):
         metrics.record_checkin()
 
-    @event.listens_for(engine, "before_cursor_execute")
+    @event.listens_for(sync_engine, "before_cursor_execute")
     def _before_cursor(conn, cursor, statement, parameters, context, executemany):
         context._experiment_query_start = perf_counter()
 
-    @event.listens_for(engine, "after_cursor_execute")
+    @event.listens_for(sync_engine, "after_cursor_execute")
     def _after_cursor(conn, cursor, statement, parameters, context, executemany):
         start = getattr(context, "_experiment_query_start", None)
         if start is not None:

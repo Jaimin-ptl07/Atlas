@@ -5,13 +5,21 @@ services:
       dockerfile: Dockerfile
       target: development
 
+    # Process-level parallelism: 4 workers = 4 processes, 4 event loops,
+    # 4 connection pools. Total pool budget = workers x (pool_size +
+    # max_overflow) = 4 x 25 = 100 = Postgres max_connections.
+    # NOTE: --workers is incompatible with --reload — code changes now
+    # need a recreate (also removes the file-watcher as a CPU confounder).
+    command:
+      ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+
     env_file:
       - ./server/.env
 
     environment:
       # Inside the compose network the database is reachable as `postgres`,
       # not localhost — real env vars override the .env value.
-      ATLAS_DATABASE_URL: postgresql+psycopg://atlas:atlas@postgres:5432/atlas
+      ATLAS_DATABASE_URL: postgresql+psycopg_async://atlas:atlas@postgres:5432/atlas
 
     ports:
       - "8000:8000"

@@ -18,9 +18,15 @@ if config.config_file_name is not None:
 
 # Database URL comes from Atlas settings (env/`.env`) — never hardcoded
 # here. An explicitly provided URL (e.g. tests pointing at a scratch
-# database) takes precedence.
+# database) takes precedence. Alembic runs migrations synchronously, so
+# an async driver URL is downgraded to its sync sibling (same wire
+# protocol, same credentials).
 if not config.get_main_option("sqlalchemy.url"):
     config.set_main_option("sqlalchemy.url", get_settings().database_url)
+config.set_main_option(
+    "sqlalchemy.url",
+    config.get_main_option("sqlalchemy.url").replace("+psycopg_async", "+psycopg"),
+)
 
 # add your model's MetaData object here
 # for 'autogenerate' support

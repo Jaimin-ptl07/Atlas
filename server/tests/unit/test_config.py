@@ -18,3 +18,23 @@ def test_database_url_defaults_to_local_dev(monkeypatch):
     settings = Settings(_env_file=None)
 
     assert settings.database_url == DEV_DATABASE_URL
+
+
+def test_pool_settings_read_from_atlas_env(monkeypatch, fresh_settings):
+    monkeypatch.setenv("ATLAS_POOL_SIZE", "90")
+    monkeypatch.setenv("ATLAS_MAX_OVERFLOW", "10")
+
+    settings = get_settings()
+
+    assert settings.pool_size == 90
+    assert settings.max_overflow == 10
+
+
+def test_pool_settings_default_to_sqlalchemy_values(monkeypatch):
+    monkeypatch.delenv("ATLAS_POOL_SIZE", raising=False)
+    monkeypatch.delenv("ATLAS_MAX_OVERFLOW", raising=False)
+
+    settings = Settings(_env_file=None)
+
+    assert settings.pool_size == 5
+    assert settings.max_overflow == 10
