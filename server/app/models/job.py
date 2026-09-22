@@ -33,6 +33,13 @@ class Job(Base):
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     job_type: Mapped[str] = mapped_column(Text, nullable=False)
 
+    # Client-supplied idempotency key: UNIQUE, but nullable — jobs submitted
+    # without one never collide (Postgres allows many NULLs in a unique
+    # index). The unique index is what makes concurrent retries safe: the
+    # second insert blocks on the index entry, then fails 23505 after the
+    # winner commits.
+    idempotency_key: Mapped[str | None] = mapped_column(Text, nullable=True, unique=True)
+
     # native_enum=False + create_constraint=True -> VARCHAR + CHECK
     # constraint: database-level status validity without PostgreSQL native
     # ENUM's ALTER TYPE pain when the state machine evolves. (create_constraint

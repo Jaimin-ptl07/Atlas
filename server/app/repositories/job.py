@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.job import Job
@@ -20,3 +21,10 @@ class JobRepository:
 
     async def get_by_id(self, job_id: object) -> Job | None:
         return await self._session.get(Job, job_id)
+
+    async def get_by_idempotency_key(self, key: str) -> Job | None:
+        result = await self._session.execute(
+            select(Job).where(Job.idempotency_key == key)
+        )
+        return result.scalars().first()
+
