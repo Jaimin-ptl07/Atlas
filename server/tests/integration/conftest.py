@@ -75,7 +75,7 @@ async def db_session(pg_engine: AsyncEngine) -> AsyncSession:
     session = factory()
 
     # Each test starts from a clean table (identifiers reset too).
-    await session.execute(text("TRUNCATE TABLE documents RESTART IDENTITY"))
+    await session.execute(text("TRUNCATE TABLE documents, jobs RESTART IDENTITY"))
     await session.commit()
 
     yield session
